@@ -1,0 +1,59 @@
+---
+title: "STAC33 Tutorial 1"
+output:
+  html_document:
+    df_print: paged
+---
+```{r}
+mtcars
+```
+
+
+
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+attach(mtcars)
+plot(drat, wt)
+ggplot(mtcars, aes(x=drat, y=wt))+geom_point()
+ggplot(mtcars, aes(x=wt))+geom_histogram()
+```
+
+Hello, my name is Nnenna. The other TA's name is Christina. This the first tutorial for STAC33. 
+
+```{r}
+my_url <- "https://www.utsc.utoronto.ca/~butler/c32/jumping.txt"
+rats <- read_delim(my_url," ")
+rats
+```
+
+#ctrl+alt+i -> r chunk
+#ctrl + shift + m -> tidyverse pipeline (windows)
+
+#command + option + i (mac)
+#command + shift  + m (?)
+
+Let's try to do some manipulation in tidyverse. 
+
+```{r}
+#group_by does not change the actual database structure; it just actually allows me to specify a grouping for my command.
+# %>% is a pipeline; the order of operation in database manipulation
+#the order is going from right to left
+rats2<-rats %>% group_by(group) %>% summarize(m=mean(density))
+rats2
+```
+```{r}
+#let's remove the group_by feature and see what happens. 
+rats_no_group<-rats %>% summarize(m=mean(density))
+rats_no_group
+
+#let's add vectors; this is the mutate function
+rats3<-rats %>% mutate(density2=density+1)
+view(rats3)
+
+#or use base R, but it is more work
+rats$density2<-rats$density +1
+rats$density2
+rats4<-data.frame(rats, rats$density2)
+```
+
