@@ -20,12 +20,17 @@ In your final report, you may want to use echo=FALSE, if you do not want your co
 ```{r, message=FALSE}
 library(tidyverse)
 attach(mtcars)
+#install.packages("skimr")
 library(skimr)
 
 view(mtcars) #your first line of defense for any assignment
 skim(mtcars)
 
 #as.numeric() transforms numbers that are presented as characters into numerical values. 
+
+#useful if you wish to find our the information about your data frame. It also works for functions you are confused about
+help(mtcars)
+help(mean)
 
 ```
 Let's ask ourselves if we can look at the association between weight of a car (wt) and the number of cylinders (cyl).
@@ -59,9 +64,14 @@ Ans: The data looks somewhat uniform based on the difficulty of deciphering the 
 ```{r}
 #lm stands for linear model. 
 
-#y ~ x -> y given x (i.e. y=m+bx)
+#y ~ x -> y given x (i.e. y=mx+b)
 
-ggplot(mtcars, aes(x=hp, y=mpg))+geom_point()+ geom_smooth(method="lm")
+ggplot(mtcars, aes(x=hp, y=mpg))+geom_point(col="red")+ geom_smooth(method="lm")
+
+#curiousity is a good thing!
+
+fit<-lm(mpg~hp, mtcars)
+summary(fit)
 
 #checking for outliers
 ggplot(mtcars, aes(x=hp)) + geom_boxplot()
@@ -69,10 +79,14 @@ ggplot(mtcars, aes(x=hp)) + geom_boxplot()
 ggplot(mtcars, aes(x=hp))+ geom_histogram()+stat_bin(bins=15)
 ```
 
-Question3 : What do you notice about Miles (mpg) as a function of horsepower (hp)?
+Question 3 : What do you notice about Miles (mpg) as a function of horsepower (hp)?
 
-Ans: I notice a negative linear (?) relationship. The effect looks at least moderate between the variables. 
+Ans: I notice a negative (1) linear (?) (2) relationship.  The effect looks at least moderate (3) between the variables. High horsepower leads to lower miles/gallon (hp) (4).
+
+**Include all these four things to get full marks**
+
+*TA's homework: Can I write this line on ggplot? Yes, I will have a look for next week. *
 
 Question 4: Make a boxplot of hp. What do you notice about the shape? Describe any other important features?
 
-Ans: I notice an outlier at 300 horsepower. Notice that the distribution is right skewed since the median (black line) is closer to Q1 than Q3 and we have a long right tail. 
+Ans: I notice an outlier at greater than 300 horsepower. Notice that the distribution is right skewed since the median (black line) is closer to Q1 than Q3 and we have a long right tail. 
