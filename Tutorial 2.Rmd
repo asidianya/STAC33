@@ -1,0 +1,78 @@
+---
+title: "Tutorial 2"
+author: "Nnenna Asidianya"
+date: "1/25/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Tutorial 2
+
+Please use message=FALSE to hide the loading of the tidyverse package. 
+
+Other neat features may be warning=FALSE. 
+
+In your final report, you may want to use echo=FALSE, if you do not want your code in between your write up. But do not use it for the assignments since we do want to see your code. The default is echo=TRUE. 
+
+```{r, message=FALSE}
+library(tidyverse)
+attach(mtcars)
+library(skimr)
+
+view(mtcars) #your first line of defense for any assignment
+skim(mtcars)
+
+#as.numeric() transforms numbers that are presented as characters into numerical values. 
+
+```
+Let's ask ourselves if we can look at the association between weight of a car (wt) and the number of cylinders (cyl).
+
+```{r}
+#bivariate analysis - two variables
+ggplot(mtcars, aes(wt, cyl)) + geom_point()
+
+#univariate analysis - one variable
+ggplot(mtcars, aes(wt)) + geom_histogram()+stat_bin(bins=15)
+
+x<-rnorm(100, mean=1, sd=0.5)
+y<-rgamma(100, 1, 1)
+z<-runif(100, 0, 1)
+
+hist(x)
+hist(y)
+hist(z)
+```
+
+Question 1: What do notice about your scatterplot? 
+
+Ans: Notice that the scatterplot has three difference cylinder classes from the plot. The weight does appear to be related to the cylinder classes; cars that weight more appear to have more cylinders. To be very specific I can see that there is overlap in the lower level cylinder classes around 3000 pounds.  
+
+Question 2: What is the shape of the distribution for weight (wt)? Plot the histogram using ggplot. 
+
+Ans: The data looks somewhat uniform based on the difficulty of deciphering the mode; the frequency looks somewhat constant across each bin.
+
+## Extra example: Assignment 0
+
+```{r}
+#lm stands for linear model. 
+
+#y ~ x -> y given x (i.e. y=m+bx)
+
+ggplot(mtcars, aes(x=hp, y=mpg))+geom_point()+ geom_smooth(method="lm")
+
+#checking for outliers
+ggplot(mtcars, aes(x=hp)) + geom_boxplot()
+
+ggplot(mtcars, aes(x=hp))+ geom_histogram()+stat_bin(bins=15)
+```
+
+Question3 : What do you notice about Miles (mpg) as a function of horsepower (hp)?
+
+Ans: I notice a negative linear (?) relationship. The effect looks at least moderate between the variables. 
+
+Question 4: Make a boxplot of hp. What do you notice about the shape? Describe any other important features?
+
+Ans: I notice an outlier at 300 horsepower. Notice that the distribution is right skewed since the median (black line) is closer to Q1 than Q3 and we have a long right tail. 
