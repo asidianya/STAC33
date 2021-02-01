@@ -1,0 +1,77 @@
+---
+title: "Week 3 R Tutorial"
+author: "Nnenna Asidianya"
+date: "2/1/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+defaultW <- getOption("warn") 
+
+options(warn = -1) 
+library(tidyverse)
+
+#install.package("tinytex")
+
+#I am going to peak at the sales variable;
+
+attach(mtcars)
+head(mtcars)
+
+#check whether your variable is distributed normally. 
+boxplot(wt)
+hist(wt)
+ggplot(mtcars, aes(x=wt))+geom_histogram(fill="red", color="black", bins=15)
+mean(wt)
+
+
+# One-sample t-test (note; df=n-1)
+#H_0: mu=2, versus mu not equal to 2
+alpha=0.05
+quant = 1-alpha/2
+n <-32
+qt(quant, n-1)
+
+res <- t.test(wt, mu = 2)
+res
+
+#If we think we have a direction of the effect then how can we code this
+res2 <- t.test(wt,alternative= "greater", mu = 2)
+res2
+
+
+
+#independent two-sample t-test
+
+#is our standard errors similar? 
+#se=sd(wt)/sqrt(n)
+# if you have equal variances then; df=(n1 - 1) + (n2-1) = n1 + n2-2 (i.e. pooled)
+data<-tibble(vs, wt)
+
+group2<-data %>% filter(vs==0) #vshaped engine
+group1<-data %>% filter(vs==1) #straight engine
+
+
+
+se1<-sd(group1$wt)/sqrt(length(group1$vs)) #(the std.err are comparable)
+se2<-sd(group2$wt)/sqrt(length(group2$vs))
+
+#default is two sided Welch test (unequal variances)
+t.test(group1$wt, group2$wt)
+
+#two sided pooled t-test
+t.test(group1$wt, group2$wt, alternative = "two.sided", var.equal = TRUE)
+
+#we can change the nature of the difference by adding mu=
+
+```
+
+Question: Is it true that the distributions of group 1 and group 2 is normally distributed? (i.e check the boxplot or histogram)
+
+Question: Do you think that it was appropriate to use the t-test within the scope of the sample sizes for groups 1 and group 2?
