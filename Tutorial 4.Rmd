@@ -1,0 +1,211 @@
+---
+title: "Tutorial 4"
+author: "Nnenna Asidianya"
+date: "2/8/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE)
+```
+
+The following four quantities have an intimate relationship:
+
+* Sample size
+* Effect size
+* Significance level (alpha) = P(Type I error) = probability of finding an effect that is not there
+* Power = 1 - P(Type II error) = probability of finding an effect that is there
+
+Given any three, we can determine the fourth.
+
+# Example 1:
+
+```{r}
+#Let's go back to the wt example from tutorial 3.
+attach(mtcars)
+head(mtcars)
+
+# One-sample t-test (note; df=n-1)
+#H_0: mu=2, versus mu not equal to 2
+alpha=0.05
+quant = 1-alpha/2
+n <-32
+qt(quant, n-1)
+
+res <- t.test(wt, mu = 2)
+res
+
+#Suppose in actual fact, mu = 3.217, so the null hypothesis is wrong. 
+#We want to reject it. How likely is that to happen? 
+```
+We know we will reject the null hypothesis because our effect size is large enough. What if we reduced our sample size an the effect size remained the same?
+
+# Example 2:
+
+I am sampling from a distribution I believe is normal and I am going to perform the following test:
+
+$$H_0: \mu = 2\hspace{0.05in} \text{vs}\hspace{0.05in}  H_1: \mu \neq 2$$. 
+
+Suppose I know that my mean is 3 and my variance is  1 (actually the standard deviation of the weight variable is 0.978).
+
+
+```{r}
+set.seed(1)
+x = rnorm(10, 3, 1)
+x
+t.test(x, mu = 2)
+
+```
+
+
+In this framework we correctly reject the null hypothesis when it is false. 
+
+
+In the Professor's lecture he has a function where runs this numerous times. The proportion of times when you reject the null hypothesis is your power. 
+
+```{r}
+set.seed(21)
+#map will run the t-test n times; as specified here 1000 simulations.
+#map_dbl returns a dbl value, in this case the p-value 100 times. 
+#convert the vector into a data frame through enframe
+library(tidyverse)
+rerun(1000, rnorm(10, 3, 1)) %>%
+map( ~ t.test(., mu = 2)) %>%
+map_dbl("p.value") %>%
+enframe(value="pvals") %>%
+count(pvals <= 0.05)
+
+```
+Hence the power is given by 809/(191+809)=0.809. Let's see how this  compares to our built in base R power test. 
+
+**Note: Your own p-value may change since it is a simulation unless you set the seed**.
+
+```{r}
+power.t.test(n = 10, delta = 3-2, sd = 1, type = "one.sample")
+```
+
+
+
+The results are pretty close to the simulated value. The power is around 80%. This will change as a function of the four things listed earlier. Let's see how.
+
+## Sample size
+
+Let's check and see what happens if we run the same test with a sample of size 5, 100, 1000. 
+
+```{r}
+#default is 0.05
+sample=c(5, 10, 100, 1000)
+sample
+pwr=power.t.test(n=sample, delta=3-2, sd=1, type="one.sample")
+sample_data=tibble(sample, pwr=pwr$power)
+sample_data
+```
+
+Notice that when the sample size increases then we are better able to pick up differences in smaller effect sizes. This is because the standard error is a function of the sample size, and when the sample size decreases your standard error shrinks. 
+
+## Alpha level: Inverse relationship with type II error. 
+
+**Note: 1- P(Type II error) = Power. And if we make it more difficult to reject the null then of course we will are less likely to accept the alternative when it is true (i.e. we increase P(Type II error)). **
+
+Let's see what happens if we change our alpha level from 0.001, and 0.1
+
+```{r}
+alpha=c(0.001, 0.01, 0.05, 0.1)
+alpha
+pwr=power.t.test(n=10, delta=3-2, sd=1, sig.level =alpha, type="one.sample")
+alpha_data=tibble(alpha, pwr=pwr$power)
+alpha_data
+```
+
+When you reduce your P(Type I error) = alpha then you are less likely to reject the null hypothesis. This means you are less likely to "accept" the alternative, and so your power goes down. 
+
+## Effect size
+
+Let's see what happens if we change our effect size to 0.5 (i.e. $H_0 = 2.5$) and to 2 (i.e. $H_0 = 1.0$)
+
+
+```{r}
+effect=c(0.5, 1, 1.5, 2, 4)
+effect
+pwr=power.t.test(n=10, delta=effect, sd=1, sig.level =0.05, type="one.sample")
+effect_data=tibble(effect, pwr=pwr$power)
+effect_data
+
+#change the effect size for fun
+effect2=seq(0.001,0.1,length.out = 10)
+```
+Notice the effect size that yields a power of 80% is the difference of 1. Now if we change the difference then the power either goes up if your difference is too small relative to the sample size, or it goes up if your effect size is so large that your initial guess is too far from what the sample yielded. 
+
+# Sign test 
+
+T-tests have a duality with confidence intervals (CI) in that they both give you an idea as to where your parameter is likely to be. A t-test that yields a rejection of the null will show that the CI does not yield the initial guess. They are both telling you the odds of where your parameter happens to be given the evidence (your data). 
+
+However, this is stipulated on your data being normally distributed. What happens if this assumption is violated?
+
+```{r}
+ggplot(mtcars, aes(x=wt))+geom_histogram(bins=15, col="black", fill="red")
+```
+
+This looks somewhat skewed or uniform (at best).  Recall the results for the t-test:
+
+```{r}
+#reject the null hypothesis
+res
+```
+
+We should use the median rather than the mean when we do not have symmetric and/or centered data. Let's readdress our test with this framework in mind. 
+
+```{r}
+#we will peak again, recognizing that this is bad statistics and we should not do this with any real data analysis. 
+median(wt)
+
+#I will test whether or not the median is different from 3. 
+```
+
+If the null is true then then each sample value  independently is equally likely to be above or below 2. This is a binary outcome and therefore for $n$ trials it has a binomial distribution with $p=0.5$. 
+
+```{r}
+mtcars %>% count(wt > 2)
+```
+We have that 28 are above and 4 are below. We need to check if this is considered an extreme outcome. Note that we do have a built in function in R for the binomial distribution.  
+
+```{r}
+#  number of times it was bigger than 2 is 28
+# total sample size is 32
+#dbinom(x, n, p)
+dbinom(28, 32, 0.5)
+```
+
+This is not the complete answer. Anyone know why?
+
+Ans: I found $P(X=28)$ but what I want is $P(X\geq 28)$ for a one sided test. For a two sided test $2 * P(X\geq 28)$. 
+
+
+```{r}
+tibble(wts=28:32) %>%
+mutate(prob=dbinom(wts, 32, 0.5)) %>%
+summarize(total=sum(prob))
+
+#This is the CDF (i.e pbinom)
+1-pbinom(28, 32,0.5)
+```
+
+What is the conclusion at the $\alpha=0.05$ level? Did I perform a one sided or a two sided test?
+
+Ans: We will we reject the null at the $\alpha=0.05$ level. This is true even if we multiply by two. 
+
+**This is a one sided test**.
+
+## Sign Package (page 18 of the sign test  lecture )
+
+Professor Butler has created a package. If I install the package I see that I first need to download the package 'usethis' so you may need to download this in addition to, or before, you use his sign test. 
+
+```{r}
+library(devtools)
+library(smmr)
+
+sign_test(mtcars, wt, 2)
+```
+
