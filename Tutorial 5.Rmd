@@ -1,0 +1,156 @@
+---
+title: "Tutorial 5"
+author: "Nnenna Asidianya"
+date: "2/22/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+```
+
+# Quantile plots:
+
+Recall our trusty mtcars example!
+
+```{r}
+attach(mtcars)
+qqnorm(wt, pch = 1, frame = FALSE)
+qqline(wt, col = "steelblue", lwd = 2)
+```
+
+Does weight of cars (per 1000 lbs) look symmetric to you? Hold this thought.
+
+#Normal Data
+
+```{r}
+library(tidyverse)
+set.seed(1021)
+z=rnorm(32, 2, 1)
+#transform to data frame for ggplot function
+z=tibble(z)
+
+ggplot(z, aes(sample=z)) + stat_qq() + stat_qq_line()
+
+``` 
+
+
+## Right-skewed
+
+```{r}
+set.seed(1021)
+y=rgamma(32, 1, 1)
+y=tibble(y)
+
+hist(y$y)
+
+ggplot(y, aes(sample=y)) + stat_qq() + stat_qq_line()
+```
+
+
+## T-distribution
+
+```{r}
+set.seed(1021)
+w=rt(32, 31)
+w=tibble(w)
+
+#for large df it starts to look to look Gaussian/normal
+hist(w$w)
+
+ggplot(w, aes(sample=w)) + stat_qq() + stat_qq_line()
+```
+
+Additional HW: Try changing the sizes of the aforementioned to 1000 for the normal distribution and the gamma. See what happens to the scatter of the data in relation to the qqpline. 
+
+
+# Matched Pairs
+
+Let's look at Prof. Butler's example from lectures:
+
+```{r}
+url = "https://www.utsc.utoronto.ca/~butler/c32/analgesic.txt"
+pain_original<-read_table(url)
+```
+
+Suppose the two groups were independent then what test would we be performing?
+```{r}
+with(pain_original, t.test(druga, drugb))
+```
+
+Why is this a matched pairs design?
+
+```{r}
+#We cannot assume independence so let's specify this
+with(pain_original, t.test(druga, drugb, paired = T))
+```
+
+The within subject differences resulted in a standard error that was larger when we assumed that the groups were independent. The result was a larger p-value. 
+
+We still fail to reject the null hypothesis (marginally) at the alpha=0.05 level that the difference between drug A and drug B appear to be significantly in managing pain.  
+
+**Note: All of this assumes that the difference between the two groups is normally distributed. Let's check if we are onto something..**
+
+```{r}
+pain<- pain_original %>% mutate (pain_diff=druga-drugb)
+attach(pain)
+
+#first check - we have a lower outlier. 
+ggplot(pain, aes(x=pain_diff)) + geom_boxplot(col="black", fill="blue", bins=6)
+
+#suspect point in the lower quartile. 
+ggplot(pain, aes(sample=pain_diff)) + stat_qq() + stat_qq_line()
+```
+Question: Should we use a test that relies on the mean?
+
+```{r}
+library(devtools)
+library(smmr)
+
+#Is the median different from zero?
+
+#H0 = mu_A-mu_B=0, HA: mu_A-mu_B \neq 0
+
+#samplemean(x_A-x_B); how far from zero?
+
+sign_test(pain, pain_diff, 0)
+```
+
+What conclusion can we make from the two-sided p-value (i.e. 0.14599) about the original t-test?
+
+#Mood's Test
+
+The sign test examines how many values are above and below a specified mean. The Mood's test looks at the median of all the ordered data, and then asks how many are above or below said median. 
+
+Question: This is a contingency table, so what test do we use here? *Hint: A value either is or is not above a particular median, which is a binomial test. What does our sampling distribution look like for a large n?*
+
+$Z = X-np/\sqrt{(np(1-p))}\sim N(0,1)$ CLT for large $n$. 
+
+Also, $Z^2 \sim \chi^2_1$. 
+
+Let's examine Prof. Butler's example again about Daylight savings:
+
+```{r}
+my_url <- "http://www.utsc.utoronto.ca/~butler/c32/dst.txt"
+dst <- read_delim(my_url," ")
+dst
+
+#Chi-square test around the mean:
+
+tab=with(dst,table(gender,agree))
+tab
+chisq.test(tab,correct=F) #The correct=F is to stop the approximation they do based on low cell counts. 
+
+dst<- dst %>% mutate(agree1=ifelse(agree=="yes", 1, 0))
+dst %>% summarize(med=median(agree1)) %>% pull(med) -> m
+tab=with(dst,table(gender,agree1>=m))
+tab
+
+median_test(dst,agree1,gender)
+
+
+
+
+```
+
+
