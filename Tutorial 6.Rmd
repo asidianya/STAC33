@@ -1,0 +1,136 @@
+---
+title: "Tutorial 6"
+author: "Nnenna Asidianya"
+date: "3/1/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE)
+```
+
+## ANOVA
+
+```{r, echo=FALSE}
+mtcars
+attach(mtcars)
+
+#Let's scan the dataframe to see what we can get.  
+#help(mtcars)
+
+as.factor(cyl)
+```
+
+It seems that we have a cyl variable that refers to number of cylinders in the car. Let's see how this influences the weight of the cars:
+
+```{r}
+library(tidyverse)
+ggplot(mtcars,aes(y=wt,x=as.factor(cyl)))+geom_boxplot()+
+  xlab("Number of cylinder")+ylab("weight(1000 lbs)")
+
+```
+
+
+Idea 1: Perform 3!/2=3 t-tests. What's wrong with this? 
+
+\begin{align}
+P(\text{at least one sig result}) &= 1- P(\text{ no significant results})\\
+&1-(1-0.05)^n
+\end{align}
+where $n$ is the number of tests performed. Here we have $n=3$ so the probability of at least one significant result is  $1-(1-0.05)^3=0.142$ even if the results are not really significant. 
+
+Idea 2:  analysis of variance (ANOVA) for when we compare more than 2 groups of independent observations (here we have three cylinder classes).
+
+The steps for the hypothesis test are like this (in general):
+
+* Null hypothesis: all groups have same mean.
+* Alternative hypothesis: “not all means the same”, at least one is different from others.
+
+```{r}
+cyl.aov=aov(wt~as.factor(cyl),data=mtcars)
+summary(cyl.aov)
+
+#df_between=k-1
+#df_within= n-k-1
+```
+
+Question 1: What do we conclude here?
+
+We will reject the null hypothesis an conclude that there appears to be a significant difference between the cylinder classes at the 0.05 level since $p-value <0.05=\alpha$. In other words, at least two cylinder classes have different car weights. 
+
+Question 2: Is this all we have to do? 
+
+No. We do not know where the difference is. We would like to know whether or not our intervals are far from 0 (i.e. a significant mean difference). 
+
+
+```{r}
+TukeyHSD(cyl.aov)
+```
+Exercise 1: All of the Tukey's HSD tests yield higher P-values than any of the individual pairwise t-tests would yield (check and see). 
+
+```{r}
+#use t.test() for each of the three differences you see above. 
+```
+
+From the output we can see that all the group differences, but especially that of 4 and 8 cylinders appear to be very significant. 
+
+Question 3: Was the test valid?
+
+* Normally distributed data
+* with equal group SDs.
+
+
+```{r}
+ggplot(mtcars, aes(sample = wt)) + stat_qq() +
+stat_qq_line() + facet_wrap( ~ as.factor(cyl))
+```
+The data is OK in 4, and slightly shaky in group 6. However, group 8 has a great deal of outliers which throws off the normality assumption here. The spread is also quite different between the groups; most especially between group 8 and the other two groups (see the boxplot). 
+
+We can alleviate these in two ways:
+
+* Perform Mood's test if we suspect the mean is a very bad guess due to the outliers (which is probably what we should do in this case). 
+
+* Welch's ANOVA test (normal data but the variances are not equal):
+
+```{r}
+library(PMCMRplus)
+
+oneway.test(wt~as.factor(cyl),data=mtcars)
+
+#these are p-values. 
+gamesHowellTest(wt~factor(cyl),data=mtcars)
+```
+
+How does this compare to the previous p-values under equal variance assumption?
+
+# Introduction
+
+# Methods
+
+# Analysis and Results
+ 
+ Do not explain results here. The explanation goes in the conclusion.But make sure to point out what your findings shows. 
+ 
+# Conclusions
+
+Here you can be creative and explain what you saw in your findings in the context of real world settings. 
+
+ 
+ 
+
+ 
+# References
+
+1. Brown, B. (2003). Title, etc. 
+
+2. Butler, Ken. (2021) Title. etc. 
+
+# Appendix
+
+```{r, eval=FALSE}
+ggplot(mtcars, aes(x=wt))+geom_histogram()
+```
+
+
