@@ -1,0 +1,88 @@
+---
+title: "Tutorial 7"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning=FALSE)
+```
+
+## Tidyverse 
+
+```{r}
+library(tidyverse)
+
+
+#from tidyverse
+fish_encounters
+```
+
+How about we pivot wider and look our data. 
+
+
+```{r}
+fish_encounters2<-fish_encounters %>%
+  pivot_wider(names_from = station, values_from = seen)
+fish_encounters2
+
+#fill in the NAs with 0.
+
+fish_encounters3 <- fish_encounters %>% 
+  pivot_wider(names_from = station, values_from = seen, values_fill = 0)
+fish_encounters3
+```
+
+Note: The select() function in tidyverse allows you to select certain columns.  Ex: select(Release| I80_1) select the first two columns; select (fish_encounters[1:2]).In contrast filter() allows you to select certain rows.
+
+Suppose we are interested in looking at fish within the range of 4842 to 4844.
+
+```{r}
+fish_encounters3r<-fish_encounters3 %>% filter(fish %in% (4842:4844))
+```
+
+Let's go back to the original data set that is in longer format and tidy things up. 
+
+How many fishes are seen within each station?
+
+
+```{r}
+count_fish<-fish_encounters %>%
+group_by(station) %>%
+summarize(sum_fish = sum(seen))%>%
+arrange(desc(sum_fish))
+
+```
+
+Let's go back to our trusty mtcars example!
+
+```{r}
+attach(mtcars)
+mtcars
+
+#tibble allows us to take columns within a dataframe
+#as.data.frame in tidyverse does a similar thing
+
+cylinder<-tibble(cyl, wt, mpg)
+cylinder
+
+#for illustrative purposes; this data is messy so we will not use it.
+wider<- cylinder %>% pivot_wider(names_from = cyl, values_from = wt) 
+```
+
+Suppose we want to use logical operators to subset the data (i.e. ==, !=, <, >, |, &, etc.)
+
+Question: What cyl class is most common for a wt between 2.8 to 3.2?
+
+```{r}
+weight<- cylinder %>% filter(wt>=2.8, wt<=3.2)
+```
+
+
+Question: Is there an association between weight (per 1000) of car and miles (US)/gallon?
+```{r}
+#create a scatterplot for wt and mpg. 
+ggplot(cylinder, aes(x=wt, y=mpg))+geom_point()+geom_smooth(method="lm")
+
+
+```
+
