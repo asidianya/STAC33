@@ -1,0 +1,95 @@
+---
+title: "Tutorial 9"
+author: "Nnenna Asidianya"
+date: "3/21/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message = FALSE)
+```
+
+
+Recall from last week that we had the following simple linear regression model using mtcars:
+
+# Simple Linear Regression
+
+```{r}
+library(tidyverse)
+attach(mtcars)
+
+ggplot(mtcars, aes(x=wt, y=mpg)) +geom_point() +geom_smooth(method="lm")
+
+model<-lm(mpg~wt, mtcars)
+summary(model)
+```
+
+Note: Two degrees lost to estimate the intercept and slope term, so really the degrees of freedom is $df=n-2$. Therefore:
+
+$P(T>|t|) = 1.29e-10$. This is equivalent to assessing whether $|t|>t_{crit} = t_{0.975; 30}=2.042$
+
+Question: How do we know that the coefficient is significant? Perform hypothesis test:
+
+$$H_0: \beta_1 = 0$$
+$$H_1: \beta_1 \neq 0$$. 
+
+
+Since p<0.05 we reject the null hypothesis and conclude the alternative. There appears to be an association between weight and miles per gallon driven. The more a car weighs the slower the car moves a given mile per gallon.
+
+Interpretation of coefficient: For every unit increase in the weight of a car (1000 lbs) the miles per gallon decreases by 5.34.
+
+## Residual plots
+
+To assess non-constant variance. It appears we have three outliers, and we have some upward U shape. This may indicate some strange non-constant variance somewhere. 
+
+```{r}
+plot(model)
+
+#this gives the qqplot and the residual plot
+plot(model, 1:2)
+```
+
+Let's pull up residuals to make a histogram:
+
+```{r}
+#check your outliers positions you can use  the following code (remove the hashtag)
+#res2<-model$residuals
+
+res<-residuals(model)
+
+res<-tibble(res)
+
+ggplot(res, aes(x=res)) + geom_histogram(col="black", fill="red", bins = 7)+xlab("residuals")
+
+```
+
+
+# Multiple Linear Regression
+
+```{r}
+ggplot(mtcars, aes(x=as.factor(cyl), y=mpg))+geom_boxplot()
+
+model2<-lm(mpg~wt + as.factor(cyl), dat=mtcars)
+summary(model2)
+```
+
+
+What is the interpretation of said model coefficients?
+
+Ans: Holding the cylinder class fixed then the change in the miles per gallon driven as the weight increases by 1000 lbs is  a decease by 3.20. 
+
+How do we determine significance?
+
+$$H_0: \text{All}  \hspace{0.05in} \beta_i= 0$$
+
+$$H_1: \text{At least one}  \hspace{0.05in} \beta_i \neq 0$$. 
+
+Let's assess the residual plots:
+
+```{r}
+plot(model2, 1:2)
+```
+
+We perhaps had non-constant variance because we were missing information from our simple linear regression model. 
