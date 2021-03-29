@@ -1,0 +1,191 @@
+---
+title: "Tutorial 10"
+author: "Nnenna Asidianya"
+date: "3/28/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, wwarning = FALSE, message = FALSE)
+```
+
+
+## Categorical variables in multiple regression:
+
+Recall the example from last week we started multiple linear regression in the context of miles per gallon (mpg). 
+
+Suppose we want to examine the association between a continuous response variable (mpg) and a categorical predictor variable (cyl). We learned that a scatter plot is plausible course of action to display the relationship in bivariate statistics.
+
+```{r}
+library(tidyverse)
+ggplot(mtcars, aes(x=as.factor(cyl), y=mpg))+geom_point()
+```
+
+
+Here we see that cyl is a discrete variable, so the scatter plot display may not necessarily translate as well. Let's change gears. 
+
+
+```{r}
+ggplot(mtcars, aes(x=as.factor(cyl), y=mpg))+geom_boxplot()
+
+model2<-lm(mpg~wt + as.factor(cyl), dat=mtcars)
+summary(model2)
+```
+
+What is the interpretation of a categorical coefficient?
+
+Here we an see that the reference group are vars with 4 cylinders. Why?
+
+Interpretation of the coefficient must be made in comparison to the reference group (4 cyclinders), which is absorbed in the intercept coeficient. 
+
+How do we determine significance?
+
+$$H_0: \text{All}  \hspace{0.05in} \beta_i= 0$$
+
+This is the same as it always was. 
+
+## Functions in R
+
+An R function is created by using the keyword *function*. The basic syntax of an R function definition is as follows:
+
+
+```{r}
+function_name <- function(arg_1,..) {
+   Function_body 
+}
+```
+
+The different parts of a function are:
+
+* Function Name − This is the actual name of the function. It is stored in the R environment as its name. 
+
+* Arguments − This is an placeholder to pass an input value into your function (i.e. $f(x)$). 
+
+* Function Body − The  function contains the statements that determines what the function does. 
+
+### Example 1:
+
+```{r}
+#Create a function to print out the values for perfect squares. 
+perfect.squares<-function(x){for (x in 1:10){
+  if(x%%x == 0)
+    b<-x^2
+  print (b)
+}}
+#pass a value to the function
+perfect.squares(10)
+```
+
+
+### Example 2:
+
+```{r}
+#Create a function with more than one argument
+translate<-function(x,y){
+  if (x=="NA"){x=0}
+  else if (x!="NA"){x=x}
+  print(x)
+  if (y== -1){y="NA"}
+  else if (y!=-1){y=y}
+  print(y)
+}
+#Testing the function with input values 
+x<-"NA"
+y<-"-1"
+x2<-1
+y2<-0
+translate(x, y)
+translate(x2, y2)
+```
+
+As an aside, in this example I could have stuck to the general structure of:
+
+<center>
+if (test_expression) {
+statement1
+} 
+else {
+statement2
+}
+</center>
+
+
+More information from my R Package Workshop: 
+
+https://github.com/asidianya/R-Workshop/blob/main/Functions.pdf
+
+
+# Assignment 10: Matrix Algebra 
+
+```{r}
+
+buses=read.table('buses.txt', header=FALSE)
+colnames(buses) <- c("expense","miles", "percentD", "percentF", "receipt")
+attach(buses)
+
+pairs(~ expense +  percentD + miles, data = buses)
+
+## Computing the sums for the predictor and response variables 
+X_1=miles
+
+X_2=percentD
+
+X_1_s=sum(X_1)
+
+X_2_s=sum(X_2)
+
+X_1_sq=sum(X_1^2)
+
+X_2_sq=sum(X_2^2)
+
+X_12_s=sum(X_1*X_2)
+
+Y_s=sum(expense)
+
+X_1_Y=sum(X_1*expense)
+
+X_2_Y=sum(X_2*expense)
+
+## Create XY matrix
+I=rep(1,24)
+
+X=cbind(I, X_1, X_2)
+
+Y=cbind(expense)
+
+XY=t(X)%*%Y
+
+## Create Matrix XX matrix and find the inverse matrix in R
+
+XX=t(X)%*%X
+Inverse=solve(XX)
+
+## beta
+beta=Inverse%*%XY
+
+fit=X%*%beta
+
+res=Y-fit
+
+## Covariance of fitted values. 
+
+
+X_r1=c(1, 46230, 43.67)
+X_r2=c(1, 7360, 65.51)
+X_r=rbind(X_r1, X_r2)
+
+
+
+CV=X_r%*%Inverse%*%t(X_r)
+
+## Multiple Linear Regression
+multi.fit = lm(expense~ miles + percentD, data=buses)
+summary(multi.fit)
+
+
+res.aov <- aov(expense~ miles + percentD, data=buses)
+summary(res.aov)
+
+AOV<-anova(multi.fit)
+
+```
