@@ -2,7 +2,9 @@
 title: "Tutorial 10"
 author: "Nnenna Asidianya"
 date: "3/28/2021"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -34,13 +36,14 @@ summary(model2)
 
 What is the interpretation of a categorical coefficient?
 
-Here we an see that the reference group are vars with 4 cylinders. Why?
+Here we an see that the reference group is "4" within the cylinders. Why? (We have a decrease in the mpg when you move to 6 and 8 cylinder classes)
 
-Interpretation of the coefficient must be made in comparison to the reference group (4 cyclinders), which is absorbed in the intercept coeficient. 
+Interpretation of the coefficient must be made in comparison to the reference group (4 cylinders), which is absorbed in the intercept coefficient. 
 
 How do we determine significance?
 
 $$H_0: \text{All}  \hspace{0.05in} \beta_i= 0$$
+$$H_1: \text{At least one $\beta_i$ is not 0}$$
 
 This is the same as it always was. 
 
@@ -160,10 +163,12 @@ XY=t(X)%*%Y
 XX=t(X)%*%X
 Inverse=solve(XX)
 
+#Exercise: XX%*%Inverse (should be close to I)
+
 ## beta
 beta=Inverse%*%XY
 
-fit=X%*%beta
+fit=X%*%beta #(i.e. Yhat=XB )
 
 res=Y-fit
 
@@ -189,3 +194,4 @@ summary(res.aov)
 AOV<-anova(multi.fit)
 
 ```
+
