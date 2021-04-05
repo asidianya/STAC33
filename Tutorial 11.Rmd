@@ -1,0 +1,81 @@
+---
+title: "Tutorial 11"
+author: "Nnenna Asidianya"
+date: "4/5/2021"
+output: html_document
+---
+
+#Matrix Algebra in R
+
+Let $A$ and $B$ be two matrices. These are the common operators in R:
+
+* A %*% B is matrix multiplication
+
+* t(A) is transpose
+
+* solve(A)  is the inverse of A, where A is a square matrix. 
+
+* solve(A, b) returns $x  =  A^{-1} y$ where the system is $ y = Ax)
+
+## Example 1: 
+
+```{r}
+#This is a 2x3 matrix
+ A <- matrix(c(1, 3, 2, 2, 8, 9), ncol = 3)
+A
+```
+
+```{r}
+#This is 3x3 matrix' default is byrow=F so if you want to append the matrix by rows change this
+
+B <- matrix(c(1, 3, 2, 2, 8, 9, 2, 3, 4), ncol = 3)
+B
+```
+
+We can multiple in one direction but it is not commutative these are not both square matrices (nor inverses).
+
+```{r}
+
+A %*% B
+
+```
+
+## Example 2
+
+Let's consider our matrix $A$ from Example 1:
+
+```{r}
+#defines the transpose 3x2 matrix
+
+t(A)
+```
+This changes the way in which we perform matrix multiplication.
+
+```{r}
+B %*% t(A)
+```
+
+# Examples 3 and 4
+
+Let's solve the system by introducing a $3 x 1$ vector.
+
+```{r}
+y = rbind(2, 4, 6)
+y
+
+```
+
+
+Notice that B is invertible since  I can solve for the inverse:
+
+```{r}
+solve(B)
+```
+
+
+Hence we can solve for the system as follows:
+
+```{r}
+ x = solve(B, y)
+x
+```
