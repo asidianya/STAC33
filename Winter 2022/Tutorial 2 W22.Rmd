@@ -1,0 +1,91 @@
+---
+title: 'STAC33: Tutorial 2'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, message=F, warning=F}
+library(tidyverse)
+```
+
+# Create graphs
+
+```{r, message=F}
+url <- "http://ritsokiguess.site/datafiles/exercise.txt"
+exercise = read_delim(url, " ")
+attach(exercise)
+#if you no longer want to use a data set then detach(). 
+```
+#Tibble: In tidyverse
+
+```{r}
+x=1:6
+y=c(2, 4, 6, 8, 10, 12)
+dat<-tibble(x, y)
+dat
+dat3<-data.frame(x, y)
+dat3
+```
+
+It takes a collection of vectors and creates a data frame (really a table) in the global environment. 
+
+a)  Read in and display (some of) the data. (This means to display enough of what you read in to convince others that you read in the right kind of thing.)
+
+```{r}
+#base R
+head(exercise)
+#tidyverse
+glimpse(exercise)
+```
+
+As an aside, it seems that minutes is expressed as a character, we probably need to change this to a numerical value.  
+
+Make a note to the grader that you have x amount of rows and y amount of columns. 
+
+
+b) Make a suitable plot of this data frame.
+
+```{r}
+minutes = ` minutes`
+minutes = as.numeric(minutes)
+g<-ggplot(aes( x = minutes, y = as.factor(gender), fill = gender), data = exercise) + geom_boxplot()+xlab("minutes") + ylab("frequency")
+g
+#flip the coordinates and view vertical box plots
+g+coord_flip()
+```
+
+Note: If I do not use as.factor(gender), there will not be any real difference in this variable here, because gender (female/male) is already binary (nomimal - differing in quality not numerical value). 
+
+In general, please use as.factor(variable). Why? 
+Answer: What if your variable has the following levels: 
+x = c(4, 4, 6, 6, 8, 8, 4, 6...). This is clearly a three level variable. But since the levels look quantitative, if you do not put as.factor(), it will take an average, and your boxplot will look off/messy. 
+
+```{r}
+mtcars
+ggplot(mtcars, aes(x=wt, y=as.factor(cyl)))+geom_boxplot()
+```
+
+c) Does there appear to be any substantial difference in the average amount of time that males and females spend exercising? Explain briefly. (“average” could be mean or median. Which is it here?)
+ 
+Answer: The "average" here refers to the median. This is because when your distribution is heavily skewed to the lef or right, the mean "bounces" with these high or low values. The median sort of sits in the same region. This is why the boxplot reports the median. 
+
+As it turns out the median for females is actually actually slightly higher than males in terms in exercise, but there is a high degree of overlap. By overlap I mean the regions of $Q_1$ to $Q_3$ exhbit a high degree of overlap in the two distributions. 
+
+How do you know that both distributions, for males as well as females, are skewed to the right? Explain (very) briefly. This does not appear to be signficant because there is a high degree of overlap in the spreads of the distributions. 
+
+d) For data like this, why does it make practical sense that the distributions are skewed to the right?
+PASIAS) and numerical summaries (chapter 4, more or less).
+
+For the male distribution we can see that the median is closer to $Q_1$ than it is to $Q_3$ and it has a long right tail. This is right skewed.For the females it is not as obvious other than a long right tail because $Q_3$ is closer to the median $Q_1$. 
+
+```{r}
+#filter only females
+females<-exercise %>% filter(gender=="female") %>% mutate(minutes=as.numeric(` minutes`))
+ggplot(females,aes(x=females$minutes))+geom_histogram(bins=5, fill="red",col="black")
+#filter only males
+males<-exercise %>% filter(gender=="male") %>% mutate(minutes=as.numeric(` minutes`))
+ggplot(males,aes(x=males$minutes))+geom_histogram(bins=5, fill="blue",col="black")
+```
+
+This confirms the female distribution is right skewed (sort of). It is slightly right-skewed, but boardering on symmetric. It is more right skewed for males than females. 
