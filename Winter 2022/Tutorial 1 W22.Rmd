@@ -1,0 +1,64 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+This is tutorial 1. We are working on assignment 0.
+
+```{r}
+mtcars
+```
+
+
+#ctrl + alt + i <-windows; generates a new chunk.
+#command + option + i <-mac; generates a new chunk
+
+
+
+#ctrl + shift + m; generates a new tidyverse pipepine windows
+#command + shift  + m; generates a tidyverse pipeline for mac
+
+
+```{r}
+#base R 
+summary(mtcars)
+```
+
+Let us have a look at the poor man's boxplot within base R. 
+
+```{r}
+boxplot(mtcars$mpg)
+#attach the dataframe to my global environment 
+attach(mtcars)
+boxplot(mpg)
+#detach allows you to remove dataframe from global environment
+```
+
+Let's play with the tidyverse functions.
+
+```{r, message=F, warning=F}
+library(tidyverse)
+ggplot(mtcars, aes(x=hp, y=mpg))+geom_point(col="blue")+geom_smooth(method="lm", col="red")+xlab("Gross horsepower")+ylab("Miles/(US) gallon")
+```
+Let's try to go back and create the boxplot for  mpg
+
+```{r}
+ggplot(mtcars, aes(x=mpg))+geom_boxplot()+xlab("Miles/(US) gallon")
+```
+How do we download data frames (external)?
+
+Ans: We have to use readr in tidyverse. Note that read_delim is a function inside of readr. 
+
+
+```{r}
+my_url="http://ritsokiguess.site/datafiles/jumping.txt"
+rats=read_delim(my_url," ")
+```
+Prelude to pipelines: here we are using tidyr.
+
+```{r}
+rats%>% group_by(group) %>% summarize(m=mean(density))
+```
