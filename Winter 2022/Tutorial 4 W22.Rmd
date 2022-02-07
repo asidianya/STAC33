@@ -1,0 +1,196 @@
+---
+title: "Tutorial 4"
+author: "Nnenna Asidianya"
+date: "2/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Tidying:
+
+
+```{r, message=FALSE,warning=FALSE}
+library(tidyverse)
+data=mtcars
+attach(data)
+```
+
+
+Mutate:
+
+1.Create a new variable.
+2. Modify existing variable.
+
+```{r}
+head(data)
+
+#re-centering
+data2<-data %>% mutate(weight=wt-mean(wt))
+
+
+#base R
+
+weight = wt -mean(wt)
+
+data3 = data.frame(data, weight)
+```
+1.Create a new variable.
+2. Modify existing variable. 
+
+Filter
+
+1. Subsetting your data across the rows. 
+
+```{r}
+ggplot(data2, aes(x=wt, y=mpg,color=as.factor(cyl)))+geom_point()
+```
+Notice that there are three different weight classes that influences the relationship between weight and mpg. We way want to subset based on cyl. 
+
+```{r}
+data4 = data2 %>% filter(cyl==4|cyl==6)
+```
+
+
+Select
+
+1. You are selecting across columns rather than observations. You have the ability to remove variables you are not interested in. However, you have not removed any observations using this.
+
+```{r}
+data5 = data2 %>% select(mpg, weight)
+
+ggplot(data5, aes(x=weight, y=mpg))+geom_point()+geom_smooth(method="lm", se=F)
+```
+
+
+
+The following four quantities have an intimate relationship:
+
+* Sample size
+* Effect size
+* Significance level (alpha) = P(Type I error) = probability of finding an effect that is not there
+* Power = 1 - P(Type II error) = probability of finding an effect that is there
+
+Given any three, we can determine the fourth.
+
+# Example 1:
+
+```{r}
+#Let's go back to the wt example from tutorial 3.
+attach(mtcars)
+head(mtcars)
+
+# One-sample t-test (note; df=n-1)
+#H_0: mu=2, versus mu not equal to 2
+alpha=0.05
+quant = 1-alpha/2
+n <-32
+qt(quant, n-1)
+
+res <- t.test(wt, mu = 2)
+res
+
+#Suppose in actual fact, mu = 3.217, so the null hypothesis is wrong. 
+#We want to reject it. How likely is that to happen? 
+```
+
+We know we will reject the null hypothesis because our effect size is large enough. What if we reduced our sample size an the effect size remained the same?
+
+# Example 2:
+
+I am sampling from a distribution I believe is normal and I am going to perform the following test:
+
+$$H_0: \mu = 2\hspace{0.05in} \text{vs}\hspace{0.05in}  H_1: \mu \neq 2$$. 
+
+Suppose I know that my mean is 3 and my variance is  1 (actually the standard deviation of the weight variable is 0.978).
+
+
+```{r}
+set.seed(1)
+x = rnorm(10, 3, 1)
+x
+t.test(x, mu = 2)
+
+```
+
+
+In this framework we correctly reject the null hypothesis when it is false. 
+
+
+In the Professor's lecture he has a function where runs this numerous times. The proportion of times when you reject the null hypothesis is your power. 
+
+```{r}
+set.seed(21)
+#map will run the t-test n times; as specified here 1000 simulations.
+#map_dbl returns a dbl value, in this case the p-value 100 times. 
+#convert the vector into a data frame through enframe
+library(tidyverse)
+rerun(1000, rnorm(10, 3, 1)) %>%
+map( ~ t.test(., mu = 2)) %>%
+map_dbl("p.value") %>%
+enframe(value="pvals") %>%
+count(pvals <= 0.05)
+
+```
+
+Hence the power is given by 809/(191+809)=0.809. Let's see how this  compares to our built in base R power test. 
+
+**Note: Your own p-value may change since it is a simulation unless you set the seed**.
+
+```{r}
+power.t.test(n = 10, delta = 3-2, sd = 1, type = "one.sample")
+```
+
+
+
+The results are pretty close to the simulated value. The power is around 80%. This will change as a function of the four things listed earlier. Let's see how.
+
+## Sample size
+
+Let's check and see what happens if we run the same test with a sample of size 5, 100, 1000. 
+
+```{r}
+#default is 0.05
+sample=c(5, 10, 100, 1000)
+sample
+pwr=power.t.test(n=sample, delta=3-2, sd=1, type="one.sample")
+sample_data=tibble(sample, pwr=pwr$power)
+sample_data
+```
+
+Notice that when the sample size increases then we are better able to pick up differences in smaller effect sizes. This is because the standard error is a function of the sample size, and when the sample size decreases your standard error shrinks. 
+
+## Alpha level: Inverse relationship with type II error. 
+
+**Note: 1- P(Type II error) = Power. And if we make it more difficult to reject the null then of course we will are less likely to accept the alternative when it is true (i.e. we increase P(Type II error)). **
+
+Let's see what happens if we change our alpha level from 0.001, and 0.1
+
+```{r}
+alpha=c(0.001, 0.01, 0.05, 0.1)
+alpha
+pwr=power.t.test(n=10, delta=3-2, sd=1, sig.level =alpha, type="one.sample")
+alpha_data=tibble(alpha, pwr=pwr$power)
+alpha_data
+```
+
+When you reduce your P(Type I error) = alpha then you are less likely to reject the null hypothesis. This means you are less likely to "accept" the alternative, and so your power goes down. 
+
+## Effect size
+
+Let's see what happens if we change our effect size to 0.5 (i.e. $H_0 = 2.5$) and to 2 (i.e. $H_0 = 1.0$)
+
+
+```{r}
+effect=c(0.5, 1, 1.5, 2, 4)
+effect
+pwr=power.t.test(n=10, delta=effect, sd=1, sig.level =0.05, type="one.sample")
+effect_data=tibble(effect, pwr=pwr$power)
+effect_data
+
+#change the effect size for fun
+effect2=seq(0.001,0.1,length.out = 10)
+```
+Notice the effect size that yields a power of 80% is the difference of 1. Now if we change the difference then the power either goes up if your difference is too small relative to the sample size, or it goes up if your effect size is so large that your initial guess is too far from what the sample yielded. 
