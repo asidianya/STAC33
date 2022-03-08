@@ -1,0 +1,133 @@
+---
+title: "Tutorial 8"
+author: "Nnenna Asidianya"
+date: "3/08/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+mobile <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-11-10/mobile.csv')
+
+View(mobile)
+```
+
+# Filtering in Tidy
+
+Perhaps I am interested in looking at how the population changed within each year. Let's look at a simple linear regression here. 
+
+```{r}
+pop<-mobile %>% 
+  select(year,continent, total_pop) 
+
+ggplot(pop, aes(x=year, y=total_pop))+xlab("Years")+ylab("Population")+geom_point()
+```
+
+This is a diaster as it indicates that different continents may have their own population growth. We probably need to subset further. The population growth in Europe and North America is slow, so we can have a look at Asia and Africa, which we may expect to have steep positive slopes. 
+
+```{r}
+Africa<-pop %>% filter(continent=="Africa")
+
+ggplot(Africa, aes(x=year, y=total_pop))+geom_point()
+```
+
+Question: Does anyone know what happened here? 
+
+It appears that we have different population growths within each country. We need to further subset our data. We should have probably selected 'entity.'
+
+```{r}
+pop2<-mobile %>% 
+  select(entity, year,continent, total_pop) 
+
+afghan<-pop2 %>% filter(entity=="Afghanistan")
+
+ggplot(afghan, aes(x=year, y=total_pop))+geom_point()+geom_smooth(method="lm")
+
+model_a<-lm(total_pop~year, data=afghan)
+summary(model_a)
+```
+
+
+Perhaps I am interested in looking at mobile use per year. 
+
+```{r}
+mobile1<-mobile %>% 
+  select(code,entity,continent,year,mobile_subs) %>%
+  pivot_wider(names_from=year, values_from=mobile_subs) 
+```
+
+Note that select works across the column space and filter works along the row space. As an example, if I want to look at the continent of Asia's mobile use in 1991 then I can filter accordingly. 
+
+In a nutshell if you want to select variables you use select(), but if you want select observations you use filter(). 
+
+
+```{r}
+Asia<- mobile1 %>% filter(continent=="Asia") %>% select("1991")
+```
+
+Note that the years as seen as a string. If you do not put the quotation mark it may not run.
+
+# Merging in Tidy
+
+From the tidy verse page you will find the following two definitions:
+
+
+inner_join()
+return all rows from x where there are matching values in y, and all columns from x and y. If there are multiple matches between x and y, all combination of the matches are returned.
+
+left_join()
+return all rows from x, and all columns from x and y. Rows in x with no match in y will have NA values in the new columns. If there are multiple matches between x and y, all combinations of the matches are returned.
+
+Be careful! They are not quite the same. One may result in slightly less information than the other. 
+
+This data set is from tidyverse. It contains a the name of the artist and their band. 
+
+```{r}
+band_members
+```
+
+We also have a data set of the instruments each player played within tidyverse:
+
+```{r}
+band_instruments
+```
+What happens if we use inner_join() versus left_join()?
+
+```{r}
+#inner join
+band_members %>% inner_join(band_instruments)
+
+#this changes y to x and x to y
+band_instruments %>% inner_join(band_members)
+```
+Question: Why did we get a 3x3 tibble?
+
+```{r}
+#left join
+band_members %>% left_join(band_instruments)
+
+#this changes y to x, and x to y
+band_instruments %>% left_join(band_members)
+```
+
+Question: We get a 3x3 tibble here. Why? 
+
+You may want to use left_join() if you think that your y variable has missing observations and you would like to treat the data. 
+
+HW: If you do right_join() then Mick will feature with an NA instead of Keith.  We would not know what instrument Mick played. 
+
+# Simple Linear Regression
+
+```{r}
+attach(mtcars)
+
+ggplot(mtcars, aes(x=wt, y=mpg))+geom_point()+geom_smooth(method="lm")
+
+model<-lm(mpg~wt, mtcars)
+summary(model)
+```
+Question: Is there is a significant relationship between weight of the car (1000 lbs) and Miles/(US) gallon driven? How do you know?
