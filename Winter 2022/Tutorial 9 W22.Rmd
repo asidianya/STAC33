@@ -1,0 +1,94 @@
+---
+title: "Intro to R Markdown and Tidyverse"
+author: "Nnenna Asidianya"
+date: "March 14 2022"
+output: 
+  pdf_document:
+    toc: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+
+
+Read in mortality rates for Canada. These data come from the [Human Mortality Database](https://www.mortality.org/), which is a great source for studying mortality in high-income countries. 
+
+```{r}
+library(tidyverse)
+dm <- read_table("CAN_Mx_1x1.txt", skip = 0)
+head(dm)
+attach(dm)
+```
+
+
+## Important tidyverse functions
+
+You should feel comfortable using the following functions
+- `pivot_longer` and `pivot_wider`
+
+
+#Change a string to numeric
+
+```{r}
+dm <- 
+  dm %>% 
+  mutate(Age = as.numeric(Age), 
+         Female = as.numeric(Female), 
+         Male = as.numeric(Male),
+         Total = as.numeric(Total))
+```
+
+## Pivoting
+
+We often need to switch between wide and long data format. The `dm` tibble is currently in wide format. To get it in long format we can use `pivot_longer`
+
+```{r}
+dm_long<-dm %>% pivot_longer(cols = Female:Total, names_to = "sex", values_to = "rate" )
+
+dm_wide <-dm_long%>% pivot_wider(names_from = "sex", values_from="rate")
+```
+
+
+
+## Using ggplot
+
+You can plot things in R using the base `plot` function, but plots using `ggplot` are much prettier. 
+
+Say we wanted to plot the mortality rates for 30 year old males over time. In the function `ggplot`, we need to specify our data (in this case, a filtered version of dm), an x axis (Year) and y axis (Male). The axes are defined withing the `aes()` function, which stands for 'aesthetics'.
+
+First let's get our data:
+
+```{r}
+dm_to_plot <- dm %>% 
+  filter(Age==30) 
+
+dm_to_plot <- dm_to_plot %>% 
+  pivot_longer(Female:Total, "sex", values_to = "mx") %>% 
+  filter(sex!="Total")
+```
+
+Now start the ggplot:
+
+```{r}
+ggplot(dm_to_plot, aes(Year, mx, color = Age, group = Age)) + 
+  geom_line()+
+  ylab("Mortality rate")+
+  facet_grid(~sex)+
+  ggtitle("Mortality rates for 30 Canadians, 1921-2011")+      
+  scale_color_gradient(low = "blue", high = "red")+ theme_classic()
+```
+
+Let's see what happens if we filter based on Male
+
+```{r}
+dm_plot2<-dm_to_plot %>% filter(sex=="Male")
+
+ggplot(dm_plot2, aes(Year, mx, color = Age, group = Age)) + 
+  geom_line()+
+  ylab("Mortality rate")+
+  ggtitle("Mortality rates for 30 Canadians, 1921-2011")+      
+  scale_color_gradient(low = "blue", high = "red")+ theme_classic()
+```
