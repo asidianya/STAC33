@@ -1,0 +1,95 @@
+---
+title: "Simple Linear Regression"
+author: "Nnenna Asidianya"
+date: "March 21, 2022"
+output: 
+  pdf_document:
+    toc: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+
+#Rainfall California
+
+The data in link are rainfall and other measurements for 30 weather stations in California. The goal is to understand how well the annual rainfall at these stations (measured in inches) can be predicted from the other measurements.
+
+```{r}
+library(tidyverse)
+rain_data<-read_table2("http://ritsokiguess.site/datafiles/calirain.txt")
+```
+
+Here read_table2 is similar to read_table but less strict. Whereas read_table requires each column to have entries that are in the same position and within the one delimiter spacing between categories. 
+
+a) Make a boxplot of the rainfall figures, and explain why the values are reasonable. (A rainfall cannot be negative, and it is unusual for a annual rainfall to exceed 60 inches.) 
+
+
+```{r}
+ggplot(rain_data, aes(x=rainfall))+geom_boxplot()+coord_flip()
+```
+
+b) Plot rainfall against each of the other quantitative variables (that is, not station).
+
+```{r}
+library(gridExtra)
+
+p1<-ggplot(rain_data, aes(x=rainfall, y=altitude))+geom_point(col="red")+geom_smooth(method="lm", se=F)
+p2<-ggplot(rain_data, aes(x=rainfall, y=latitude))+geom_point(col="red")+geom_smooth(method="lm", se=F)
+
+grid.arrange(p1, p2, nrow=1)
+
+
+```
+
+
+Look at the relationship of each other variable with rainfall. Justify the assertion that latitude seems most strongly related with rainfall. Is that relationship positive or negative? linear? Explain briefly.
+
+```{r}
+ggplot(rain_data, aes(x=rainfall, y=fromcoast))+geom_point(col="red")+geom_smooth(method="lm", se=F)
+
+```
+
+Answer: The relationship with latitude and rainfall is positive. As the latitude increases the amount of rainfall increases. Note that it is the strongest relationship because we can see the strongest slope of the line, and the fitted line does a good job of predicting the observed values. 
+
+Fit a regression with rainfall as the response variable, and latitude as your explanatory variable. What are the intercept, slope and R-squared values? Is there a significant relationship between rainfall and your explanatory variable? What does that mean?
+
+```{r}
+model<-lm(rainfall~latitud, rain_data)
+summary(model)
+```
+Answer: 
+
+1) The R-squared is 0.3326. This is called the coefficient of determination. It tells you the proportion of the variation in your rainfall this is determined by latitude. Note: $R^2 = r^2$, where $r$ is the correlation coefficient. This means that if the correlation between latitude and rainfall is poor, then the ability to predict rainfall from latitude will be poor. 
+
+$r\sqrt(0.3326) = 0.577$ since the sign of the slope is positive.  
+
+Since p<0.05, we reject the null hypothesis and conclude the alternative. There appears to be a significant association between latitude and rainfall. As the latitude increases the rainfall appears to increase as well. 
+
+Fit a multiple regression predicting rainfall from all three of the other (quantitative) variables. Display the results. Comment is coming up later.
+
+```{r}
+model2<-lm(rainfall~latitude + altitude + fromcoast, rain_data)
+summary(model2)
+```
+
+What is the R-squared for the regression of the last part? How does that compare with the R-squared of your regression in part (e)?
+ 
+Answer: The R-squared went up (i.e. 0.6003). This always happens even if your predictor variable itself is not significant. The R-squared will always increase when you add more explanatory variable. What this means is that your model is more equipped to describe the trends in your data. 
+
+What do you conclude about the importance of the variables that you did not include in your model in (e)? Explain briefly.
+
+Answer: From an objective standpoint, the p<0.05 for fromcoast and altitude. So we might conclude that they are significant. On the other hand, we can see that the effect of latitude shrunk, we may have multicollinearity that we need to check among our predictor varibles. 
+
+
+
+Make a suitable hypothesis test that the variables altitude and fromcoast significantly improve the prediction of rainfall over the use of latitude alone. What do you conclude?
+
+```{r}
+ggplot(rain_data, aes(x=altitude, y=fromcoast))+geom_point(col="red")+geom_smooth(method="lm", se=F)
+
+ggplot(rain_data, aes(x=altitude, y=latitude))+geom_point(col="red")+geom_smooth(method="lm", se=F)
+
+```
